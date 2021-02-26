@@ -24,20 +24,14 @@ public class SteamService {
     private String steamApiKey;
 
     private String getSteamApiUrl(String baseUrl, String[][] steamQueryParams) {
-        Stream.of(steamQueryParams).reduce(new HashMap<String, String>(), (queryParamMap, queryEntry) -> {
-            //
-        })
+        List<String[]> queryParams = new ArrayList<>(Arrays.asList(steamQueryParams));
 
-        List<String[]> queryParams = Arrays.asList(steamQueryParams);
-
-        log.info("Ugh I hate me = {}", queryParams);
-
+        queryParams.add(new String[] { "key", steamApiKey });
         queryParams.add(new String[] { "format", "json" });
-//        queryParams.add(new String[] { "key", steamApiKey });
 
-        log.info("Fuck me, query params = {}", queryParams.toArray());
+        String[][] queryParamsWithNecessaryFieldsForSteam = queryParams.toArray(new String[queryParams.size()][]);
 
-        return Requests.getUrlWithQueryParams(baseUrl, queryParams.toArray());
+        return Requests.getUrlWithQueryParams(baseUrl, queryParamsWithNecessaryFieldsForSteam);
     }
 
     @Async

@@ -17,8 +17,8 @@ public class ApplicationApi {
     @Autowired
     SteamWhoCanIPlayWithController steamWhoCanIPlayWithController;
 
-    @PostMapping(value = "/getPlayableGames")
-    public ResponseEntity<Object> getVideosForEpisode(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
-        return steamWhoCanIPlayWithController.getVideosForEpisode(getPlayableGamesRequest);
+    @PostMapping(value = "/getPlayableGamesForUser")
+    public ResponseEntity<Object> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
+        return steamWhoCanIPlayWithController.getPlayableGamesForUser(getPlayableGamesRequest);
     }
 }

@@ -17,7 +17,7 @@ public class SteamWhoCanIPlayWithController {
     @Autowired
     SteamService steamService;
 
-    public ResponseEntity<Object> getVideosForEpisode(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
+    public ResponseEntity<Object> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
         String username = getPlayableGamesRequest.getUsername();
         String steamUserId = null;
 

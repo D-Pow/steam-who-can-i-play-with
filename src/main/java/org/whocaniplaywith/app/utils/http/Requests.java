@@ -43,13 +43,11 @@ public class Requests {
     }
 
     public static String getUrlWithQueryParams(String baseUrl, String[][] queryParams) {
-        log.info("DERP args: baseUrl = {}, params = {}", baseUrl, queryParams);
-
         return baseUrl + "?" + Stream.of(queryParams)
             .map(queryParam ->
                 UriUtils.encode(queryParam[0], StandardCharsets.UTF_8)
                 + "="
-                + UriUtils.encode(queryParam[1], StandardCharsets.UTF_8.toString())
+                + UriUtils.encode(queryParam[1], StandardCharsets.UTF_8)
             )
             .collect(Collectors.joining("&"));
     }

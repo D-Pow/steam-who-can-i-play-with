@@ -12,10 +12,8 @@ import org.whocaniplaywith.app.utils.http.Requests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -36,13 +34,11 @@ public class SteamService {
 
     @Async
     public CompletableFuture<String> getSteamIdFromUsername(String username) {
-        log.info("Called with username = {}", username);
+        log.info("Getting Steam ID for username = {}", username);
 
         String getSteamIdFromUsernameUrl = getSteamApiUrl(Constants.URL_STEAM_ID_FROM_USERNAME, new String[][]{
             { "vanityurl", username }
         });
-
-        log.info("ASDF req URL = {}", getSteamIdFromUsernameUrl);
 
         String body = new RestTemplate().exchange(
             getSteamIdFromUsernameUrl,

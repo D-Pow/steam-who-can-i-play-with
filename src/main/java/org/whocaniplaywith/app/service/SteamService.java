@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.whocaniplaywith.app.model.SteamIdResponse;
+import org.whocaniplaywith.app.model.SteamUserProfile;
+import org.whocaniplaywith.app.model.SteamUserProfileResponse;
 import org.whocaniplaywith.app.utils.Constants;
 import org.whocaniplaywith.app.utils.http.Requests;
 
@@ -56,5 +58,31 @@ public class SteamService {
         log.info("Steam ID from username = {}", steamIdResponse);
 
         return CompletableFuture.completedFuture(steamId);
+    }
+
+    @Async
+    public CompletableFuture<SteamUserProfile> getUserProfile(String steamId) {
+        log.info("Getting Steam user profile for Steam ID [{}]", steamId);
+
+        SteamUserProfile userProfile = null;
+        String getUserProfileUrl = getSteamApiUrl(Constants.URL_STEAM_PROFILE_INFO, new String[][]{
+            {"steamids", steamId}
+        });
+
+        SteamUserProfileResponse userProfileResponse = new RestTemplate().exchange(
+            getUserProfileUrl,
+            HttpMethod.GET,
+            new HttpEntity<>(null, null),
+            SteamUserProfileResponse.class
+        ).getBody();
+
+        if (userProfileResponse != null && userProfileResponse.getResponse() != null) {
+            userProfile = userProfileResponse.getResponse().getPlayers().stream()
+                .filter(profile -> profile.getSteamid().equals(steamId)).findFirst().orElse(null);
+        }
+
+        log.info("Steam user profile = {}", userProfile);
+
+        return CompletableFuture.completedFuture(userProfile);
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.whocaniplaywith.app.model.SteamIdResponse;
 import org.whocaniplaywith.app.utils.Constants;
 import org.whocaniplaywith.app.utils.http.Requests;
 
@@ -36,19 +37,24 @@ public class SteamService {
     public CompletableFuture<String> getSteamIdFromUsername(String username) {
         log.info("Getting Steam ID for username = {}", username);
 
+        String steamId = null;
         String getSteamIdFromUsernameUrl = getSteamApiUrl(Constants.URL_STEAM_ID_FROM_USERNAME, new String[][]{
             { "vanityurl", username }
         });
 
-        String body = new RestTemplate().exchange(
+        SteamIdResponse steamIdResponse = new RestTemplate().exchange(
             getSteamIdFromUsernameUrl,
             HttpMethod.GET,
             new HttpEntity<>(null, null),
-            String.class
+            SteamIdResponse.class
         ).getBody();
 
-        log.info("Steam ID from username = {}", body);
+        if (steamIdResponse != null && steamIdResponse.getResponse() != null) {
+            steamId = steamIdResponse.getResponse().getSteamid();
+        }
 
-        return CompletableFuture.completedFuture(body);
+        log.info("Steam ID from username = {}", steamIdResponse);
+
+        return CompletableFuture.completedFuture(steamId);
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.web.client.RestTemplate;
 import org.whocaniplaywith.app.model.SteamFriends;
 import org.whocaniplaywith.app.model.SteamFriendsResponse;
 import org.whocaniplaywith.app.model.SteamIdResponse;
+import org.whocaniplaywith.app.model.SteamOwnedGame;
+import org.whocaniplaywith.app.model.SteamOwnedGamesResponse;
 import org.whocaniplaywith.app.model.SteamUserProfile;
 import org.whocaniplaywith.app.model.SteamUserProfileResponse;
 import org.whocaniplaywith.app.utils.Constants;
@@ -118,5 +120,35 @@ public class SteamService {
         log.info("FriendIds for Steam ID [{}] are = {}", steamId, friendIds);
 
         return CompletableFuture.completedFuture(friendIds);
+    }
+
+    @Async
+    public CompletableFuture<List<SteamOwnedGame>> getSteamOwnedGamesForUser(String steamId) {
+        log.info("Getting owned games for Steam ID [{}]", steamId);
+
+        List<SteamOwnedGame> ownedGames = null;
+        String getSteamOwnedGamesUrl = getSteamApiUrl(Constants.URL_STEAM_GET_OWNED_GAMES, new String[][]{
+            { "steamid", steamId },
+            { "include_appinfo", "true" }
+        });
+
+        SteamOwnedGamesResponse steamOwnedGamesResponse = new RestTemplate().exchange(
+            getSteamOwnedGamesUrl,
+            HttpMethod.GET,
+            new HttpEntity<>(null, null),
+            SteamOwnedGamesResponse.class
+        ).getBody();
+
+        if (
+            steamOwnedGamesResponse != null
+            && steamOwnedGamesResponse.getResponse() != null
+            && !steamOwnedGamesResponse.getResponse().getGames().isEmpty()
+        ) {
+            ownedGames = steamOwnedGamesResponse.getResponse().getGames();
+        }
+
+        log.info("Owned games for Steam ID [{}] are = {}", steamId, ownedGames);
+
+        return CompletableFuture.completedFuture(ownedGames);
     }
 }

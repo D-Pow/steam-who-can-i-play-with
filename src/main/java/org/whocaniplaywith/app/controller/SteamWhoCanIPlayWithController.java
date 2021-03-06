@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.whocaniplaywith.app.model.GetPlayableGamesRequest;
+import org.whocaniplaywith.app.model.SteamOwnedGame;
 import org.whocaniplaywith.app.model.SteamUserProfile;
 import org.whocaniplaywith.app.service.SteamService;
 
@@ -29,6 +30,7 @@ public class SteamWhoCanIPlayWithController {
             steamUserId = steamService.getSteamIdFromUsername(username).get();
             SteamUserProfile userProfile = steamService.getUserProfile(steamUserId).get();
             List<String> friendIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
+            List<SteamOwnedGame> userOwnedGames = steamService.getSteamOwnedGamesForUser(steamUserId).get();
         } catch (InterruptedException | ExecutionException e) {
             log.error("Could not get Steam UserId future. Error = {}", e.getMessage());
 

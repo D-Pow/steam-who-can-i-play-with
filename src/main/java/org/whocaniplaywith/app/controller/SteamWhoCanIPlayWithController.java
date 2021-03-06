@@ -10,6 +10,7 @@ import org.whocaniplaywith.app.model.GetPlayableGamesRequest;
 import org.whocaniplaywith.app.model.SteamUserProfile;
 import org.whocaniplaywith.app.service.SteamService;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Controller
@@ -27,6 +28,7 @@ public class SteamWhoCanIPlayWithController {
         try {
             steamUserId = steamService.getSteamIdFromUsername(username).get();
             SteamUserProfile userProfile = steamService.getUserProfile(steamUserId).get();
+            List<String> friendIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
         } catch (InterruptedException | ExecutionException e) {
             log.error("Could not get Steam UserId future. Error = {}", e.getMessage());
 

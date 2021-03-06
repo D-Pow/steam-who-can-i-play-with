@@ -7,6 +7,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.whocaniplaywith.app.model.SteamFriends;
+import org.whocaniplaywith.app.model.SteamFriendsResponse;
 import org.whocaniplaywith.app.model.SteamIdResponse;
 import org.whocaniplaywith.app.model.SteamUserProfile;
 import org.whocaniplaywith.app.model.SteamUserProfileResponse;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -84,5 +87,36 @@ public class SteamService {
         log.info("Steam user profile = {}", userProfile);
 
         return CompletableFuture.completedFuture(userProfile);
+    }
+
+    @Async
+    public CompletableFuture<List<String>> getSteamFriendsIds(String steamId) {
+        log.info("Getting Steam friend IDs for Steam ID [{}]", steamId);
+
+        List<String> friendIds = null;
+        String getSteamFriendssUrl = getSteamApiUrl(Constants.URL_STEAM_GET_FRIENDS_OF_USER_ID, new String[][]{
+            { "steamid", steamId },
+            { "relationship", "friend" }
+        });
+
+        SteamFriendsResponse steamFriendsResponse = new RestTemplate().exchange(
+            getSteamFriendssUrl,
+            HttpMethod.GET,
+            new HttpEntity<>(null, null),
+            SteamFriendsResponse.class
+        ).getBody();
+
+        if (
+            steamFriendsResponse != null
+            && steamFriendsResponse.getFriendslist() != null
+            && !steamFriendsResponse.getFriendslist().getFriends().isEmpty()
+        ) {
+            List<SteamFriends> friends = steamFriendsResponse.getFriendslist().getFriends();
+            friendIds = friends.stream().map(SteamFriends::getSteamid).collect(Collectors.toList());
+        }
+
+        log.info("FriendIds for Steam ID [{}] are = {}", steamId, friendIds);
+
+        return CompletableFuture.completedFuture(friendIds);
     }
 }

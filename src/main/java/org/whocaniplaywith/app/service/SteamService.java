@@ -66,7 +66,7 @@ public class SteamService {
 
         SteamUserProfile userProfile = null;
         String getUserProfileUrl = getSteamApiUrl(Constants.URL_STEAM_PROFILE_INFO, new String[][]{
-            {"steamids", steamId}
+            { "steamids", steamId }
         });
 
         SteamUserProfileResponse userProfileResponse = new RestTemplate().exchange(

@@ -118,6 +118,7 @@ public class ObjectUtils {
 
     public static <T> T sanitizeAndParseJsonToClass(String json, Class<T> parseToClass, Map<DeserializationFeature, Boolean> objMapperFlags) {
         ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json().build();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         if (objMapperFlags != null) {
             objMapperFlags.forEach(objectMapper::configure);

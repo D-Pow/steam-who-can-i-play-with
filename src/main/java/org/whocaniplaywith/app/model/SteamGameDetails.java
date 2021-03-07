@@ -30,19 +30,19 @@ public class SteamGameDetails {
     }
 
     @Data
-    public static class SteamGameCategories {
+    public static class GameCategories {
         private int id;
         private String description;
     }
 
     @Data
-    public static class SteamGameGenres {
+    public static class GameGenres {
         private int id;
         private String description;
     }
 
     @Data
-    public static class SteamGameScreenshots {
+    public static class GameScreenshots {
         private int id;
         @JsonProperty("path_thumbnail")
         private URI pathThumbnail;
@@ -123,9 +123,9 @@ public class SteamGameDetails {
     private List<String> publishers;
     private Platforms platforms;
     private MetacriticRating metacritic;
-    private List<SteamGameCategories> categories;
-    private List<SteamGameGenres> genres;
-    private List<SteamGameScreenshots> screenshots;
+    private List<GameCategories> categories;
+    private List<GameGenres> genres;
+    private List<GameScreenshots> screenshots;
     private Recommendations recommendations;
     @JsonProperty("release_date")
     private ReleaseDate releaseDate;

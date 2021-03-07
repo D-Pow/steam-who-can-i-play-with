@@ -1,6 +1,7 @@
 package org.whocaniplaywith.app.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
@@ -111,7 +113,15 @@ public class ObjectUtils {
     }
 
     public static <T> T sanitizeAndParseJsonToClass(String json, Class<T> parseToClass) {
+        return sanitizeAndParseJsonToClass(json, parseToClass, null);
+    }
+
+    public static <T> T sanitizeAndParseJsonToClass(String json, Class<T> parseToClass, Map<DeserializationFeature, Boolean> objMapperFlags) {
         ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json().build();
+
+        if (objMapperFlags != null) {
+            objMapperFlags.forEach(objectMapper::configure);
+        }
 
         String nonAsciiCharactersRegex = "[^\\x00-\\x7F]";
         String asciiControlCharactersRegex = "[\\p{Cntrl}&&[^\r\n\t]]";

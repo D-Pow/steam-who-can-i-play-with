@@ -126,7 +126,7 @@ public class SteamService {
     public CompletableFuture<List<SteamOwnedGame>> getSteamOwnedGamesForUser(String steamId) {
         log.info("Getting owned games for Steam ID [{}]", steamId);
 
-        List<SteamOwnedGame> ownedGames = null;
+        List<SteamOwnedGame> ownedGames = new ArrayList<>();
         String getSteamOwnedGamesUrl = getSteamApiUrl(Constants.URL_STEAM_GET_OWNED_GAMES, new String[][]{
             { "steamid", steamId },
             { "include_appinfo", "true" }
@@ -147,7 +147,7 @@ public class SteamService {
             ownedGames = steamOwnedGamesResponse.getResponse().getGames();
         }
 
-        log.info("Owned games for Steam ID [{}] are = {}", steamId, ownedGames);
+        log.info("Obtained {} owned games for Steam ID [{}]", ownedGames.size(), steamId);
 
         return CompletableFuture.completedFuture(ownedGames);
     }

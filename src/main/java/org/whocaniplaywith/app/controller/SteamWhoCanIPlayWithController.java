@@ -33,18 +33,18 @@ public class SteamWhoCanIPlayWithController {
         try {
             steamUserId = steamService.getSteamIdFromUsername(username).get();
             SteamUserProfile userProfile = steamService.getUserProfile(steamUserId).get();
-            List<String> friendIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
             List<SteamOwnedGame> userOwnedGames = steamService.getSteamOwnedGamesForUser(steamUserId).get();
 
             List<CompletableFuture<SteamGameDetails>> ownedGameDetailsFutures = userOwnedGames.stream()
                 .map(game -> steamService.getGameDetails(String.valueOf(game.getAppid())))
                 .collect(Collectors.toList());
-
             List<SteamGameDetails> ownedGameDetails =
                 ObjectUtils.getAllCompletableFutureResults(ownedGameDetailsFutures).stream()
                     .filter(game -> game != null)
                     .collect(Collectors.toList());
             List<SteamGameDetails> ownedMultiplayerGames = steamService.getMultiplayerGames(ownedGameDetails);
+
+            List<String> friendsIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
         } catch (InterruptedException | ExecutionException e) {
             log.error("Could not get Steam UserId future. Error = {}", e.getMessage());
 

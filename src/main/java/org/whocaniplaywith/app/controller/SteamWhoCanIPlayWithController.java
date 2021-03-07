@@ -36,12 +36,12 @@ public class SteamWhoCanIPlayWithController {
             List<String> friendIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
             List<SteamOwnedGame> userOwnedGames = steamService.getSteamOwnedGamesForUser(steamUserId).get();
 
-            List<CompletableFuture<SteamGameDetails>> gameDetailsFutures = userOwnedGames.stream()
+            List<CompletableFuture<SteamGameDetails>> ownedGameDetailsFutures = userOwnedGames.stream()
                 .map(game -> steamService.getGameDetails(String.valueOf(game.getAppid())))
                 .collect(Collectors.toList());
 
             List<SteamGameDetails> ownedGameDetails =
-                ObjectUtils.getAllCompletableFutureResults(gameDetailsFutures).stream()
+                ObjectUtils.getAllCompletableFutureResults(ownedGameDetailsFutures).stream()
                     .filter(game -> game != null)
                     .collect(Collectors.toList());
             List<SteamGameDetails> ownedMultiplayerGames = steamService.getMultiplayerGames(ownedGameDetails);

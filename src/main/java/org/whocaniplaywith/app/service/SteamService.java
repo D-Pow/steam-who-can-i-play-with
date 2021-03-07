@@ -7,8 +7,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.whocaniplaywith.app.model.SteamGameDetails;
 import org.whocaniplaywith.app.model.SteamFriends;
 import org.whocaniplaywith.app.model.SteamFriendsResponse;
+import org.whocaniplaywith.app.model.SteamGameDetailsResponse;
 import org.whocaniplaywith.app.model.SteamIdResponse;
 import org.whocaniplaywith.app.model.SteamOwnedGame;
 import org.whocaniplaywith.app.model.SteamOwnedGamesResponse;
@@ -20,6 +22,7 @@ import org.whocaniplaywith.app.utils.http.Requests;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -150,5 +153,44 @@ public class SteamService {
         log.info("Obtained {} owned games for Steam ID [{}]", ownedGames.size(), steamId);
 
         return CompletableFuture.completedFuture(ownedGames);
+    }
+
+    @Async
+    public CompletableFuture<SteamGameDetails> getGameDetails(String gameAppId) {
+        log.info("Getting game details for game app ID [{}]", gameAppId);
+
+        SteamGameDetails gameDetails = null;
+        String getGameDetailsUrl = Requests.getUrlWithQueryParams(Constants.URL_STEAM_GET_GAME_DETAILS, new String[][]{
+            { "appids", gameAppId }
+        });
+
+        String gameDetailsResponseString = new RestTemplate().exchange(
+            getGameDetailsUrl,
+            HttpMethod.GET,
+            new HttpEntity<>(null, null),
+            String.class
+        ).getBody();
+
+        Map<String, SteamGameDetailsResponse.GameDetailsResponse> gameDetailsResponseMap =
+            SteamGameDetailsResponse.getAppIdDetailsMap(gameDetailsResponseString);
+
+        if (
+            gameDetailsResponseMap != null
+            && gameDetailsResponseMap.size() > 0
+        ) {
+            try {
+                SteamGameDetailsResponse.GameDetailsResponse gameDetailsResponse = gameDetailsResponseMap.get(gameAppId);
+
+                if (gameDetailsResponse.isSuccess()) {
+                    gameDetails = gameDetailsResponse.getData();
+                } else {
+                    log.info("Game details request failed for appId [{}]", gameAppId);
+                }
+            } catch (Exception e) {
+                log.info("Could not obtain game details for appId [{}]. Error:", gameAppId, e);
+            }
+        }
+
+        return CompletableFuture.completedFuture(gameDetails);
     }
 }

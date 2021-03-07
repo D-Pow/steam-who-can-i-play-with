@@ -40,7 +40,10 @@ public class SteamWhoCanIPlayWithController {
                 .map(game -> steamService.getGameDetails(String.valueOf(game.getAppid())))
                 .collect(Collectors.toList());
 
-            List<SteamGameDetails> ownedGameDetails = ObjectUtils.getAllCompletableFutureResults(gameDetailsFutures);
+            List<SteamGameDetails> ownedGameDetails =
+                ObjectUtils.getAllCompletableFutureResults(gameDetailsFutures).stream()
+                    .filter(game -> game != null)
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {
             log.error("Could not get Steam UserId future. Error = {}", e.getMessage());
 

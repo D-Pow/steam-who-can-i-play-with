@@ -7,15 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.whocaniplaywith.app.model.SteamGameDetails;
-import org.whocaniplaywith.app.model.SteamFriends;
-import org.whocaniplaywith.app.model.SteamFriendsResponse;
-import org.whocaniplaywith.app.model.SteamGameDetailsResponse;
-import org.whocaniplaywith.app.model.SteamIdResponse;
-import org.whocaniplaywith.app.model.SteamOwnedGame;
-import org.whocaniplaywith.app.model.SteamOwnedGamesResponse;
-import org.whocaniplaywith.app.model.SteamUserProfile;
-import org.whocaniplaywith.app.model.SteamUserProfileResponse;
+import org.whocaniplaywith.app.model.*;
 import org.whocaniplaywith.app.utils.Constants;
 import org.whocaniplaywith.app.utils.http.Requests;
 
@@ -192,5 +184,21 @@ public class SteamService {
         }
 
         return CompletableFuture.completedFuture(gameDetails);
+    }
+
+    public List<SteamGameDetails> getMultiplayerGames(List<SteamGameDetails> games) {
+        return games.stream()
+            .filter(gameDetails -> {
+                if (gameDetails.getCategories() == null) {
+                    return false;
+                }
+
+                List<Integer> gameCategoriesIds = gameDetails.getCategories().stream()
+                    .map(SteamGameDetails.GameCategories::getId)
+                    .collect(Collectors.toList());
+
+                return SteamGameCategories.isGameMultiplayer(gameCategoriesIds);
+            })
+            .collect(Collectors.toList());
     }
 }

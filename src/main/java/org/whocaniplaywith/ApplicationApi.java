@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.whocaniplaywith.app.controller.SteamWhoCanIPlayWithController;
 import org.whocaniplaywith.app.model.GetPlayableGamesRequest;
+import org.whocaniplaywith.app.model.SteamPlayableMultiplayerGamesResponse;
 
 @RestController
 @CrossOrigin
@@ -18,7 +19,7 @@ public class ApplicationApi {
     SteamWhoCanIPlayWithController steamWhoCanIPlayWithController;
 
     @PostMapping(value = "/getPlayableGamesForUser")
-    public ResponseEntity<Object> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
+    public ResponseEntity<SteamPlayableMultiplayerGamesResponse> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
         return steamWhoCanIPlayWithController.getPlayableGamesForUser(getPlayableGamesRequest);
     }
 }

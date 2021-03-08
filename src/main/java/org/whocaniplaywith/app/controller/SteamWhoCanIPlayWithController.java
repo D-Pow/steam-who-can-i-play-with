@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.whocaniplaywith.app.model.SteamGameDetails;
 import org.whocaniplaywith.app.model.GetPlayableGamesRequest;
 import org.whocaniplaywith.app.model.SteamOwnedGame;
+import org.whocaniplaywith.app.model.SteamPlayableMultiplayerGamesResponse;
 import org.whocaniplaywith.app.model.SteamUserProfile;
 import org.whocaniplaywith.app.service.SteamService;
 import org.whocaniplaywith.app.utils.ObjectUtils;
@@ -98,14 +99,14 @@ public class SteamWhoCanIPlayWithController {
         );
     }
 
-    public ResponseEntity<Object> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
+    public ResponseEntity<SteamPlayableMultiplayerGamesResponse> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
+        SteamPlayableMultiplayerGamesResponse response = new SteamPlayableMultiplayerGamesResponse();
         String username = getPlayableGamesRequest.getUsername();
-        String steamUserId = null;
 
         log.info("Request = {}", getPlayableGamesRequest);
 
         try {
-            steamUserId = steamService.getSteamIdFromUsername(username).get();
+            String steamUserId = steamService.getSteamIdFromUsername(username).get();
 
             SteamUserProfile userProfile = steamService.getUserProfile(steamUserId).get();
             List<SteamGameDetails> ownedGamesDetails = getAllGameDetailsForUser(steamUserId);
@@ -122,6 +123,6 @@ public class SteamWhoCanIPlayWithController {
                 .build();
         }
 
-        return ResponseEntity.ok(steamUserId);
+        return ResponseEntity.ok(response);
     }
 }

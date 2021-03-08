@@ -2,11 +2,13 @@ package org.whocaniplaywith.app.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.whocaniplaywith.ApplicationConfig;
 import org.whocaniplaywith.app.model.*;
 import org.whocaniplaywith.app.utils.Constants;
 import org.whocaniplaywith.app.utils.http.Requests;
@@ -148,6 +150,7 @@ public class SteamService {
     }
 
     @Async
+    @Cacheable(ApplicationConfig.STEAM_GAME_DETAILS_CACHE_NAME)
     public CompletableFuture<SteamGameDetails> getGameDetails(String gameAppId) {
         log.info("Getting game details for game app ID [{}]", gameAppId);
 

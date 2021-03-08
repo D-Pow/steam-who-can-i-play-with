@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -189,7 +190,7 @@ public class SteamService {
         return CompletableFuture.completedFuture(gameDetails);
     }
 
-    public List<SteamGameDetails> getMultiplayerGames(List<SteamGameDetails> games) {
+    private List<SteamGameDetails> getMultiplayerGamesOfCategory(List<SteamGameDetails> games, Function<List<Integer>, Boolean> multiplayerCategoryFunc) {
         return games.stream()
             .filter(gameDetails -> {
                 if (gameDetails.getCategories() == null) {
@@ -200,8 +201,20 @@ public class SteamService {
                     .map(SteamGameDetails.GameCategories::getId)
                     .collect(Collectors.toList());
 
-                return SteamGameCategories.isGameMultiplayer(gameCategoriesIds);
+                return multiplayerCategoryFunc.apply(gameCategoriesIds);
             })
             .collect(Collectors.toList());
+    }
+
+    public List<SteamGameDetails> getMultiplayerGames(List<SteamGameDetails> games) {
+        return getMultiplayerGamesOfCategory(games, SteamGameCategories::isGameMultiplayer);
+    }
+
+    public List<SteamGameDetails> getRemotePlayGames(List<SteamGameDetails> games) {
+        return getMultiplayerGamesOfCategory(games, SteamGameCategories::isGameRemotePlay);
+    }
+
+    public List<SteamGameDetails> getSplitScreenGames(List<SteamGameDetails> games) {
+        return getMultiplayerGamesOfCategory(games, SteamGameCategories::isGameSplitScreen);
     }
 }

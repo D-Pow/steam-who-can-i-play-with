@@ -68,4 +68,12 @@ public enum SteamGameCategories {
             .map(SteamGameCategories::getId)
             .anyMatch(gameCategoryIds::contains);
     }
+
+    public static boolean isGameSplitScreen(List<Integer> gameCategoryIds) {
+        return gameCategoryIds.contains(SteamGameCategories.SplitScreen.getId());
+    }
+
+    public static boolean isGameRemotePlay(List<Integer> gameCategoryIds) {
+        return gameCategoryIds.contains(SteamGameCategories.RemotePlayTogether.getId());
+    }
 }

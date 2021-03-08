@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Controller
@@ -99,6 +100,91 @@ public class SteamWhoCanIPlayWithController {
         );
     }
 
+    private Map<String, List<String>> getSharedMultiplayerGames(List<Long> ownedMultiplayerGamesIds, Map<String, List<SteamGameDetails>> friendsMultiplayerGames) {
+        return friendsMultiplayerGames.entrySet().stream()
+            .reduce(
+                new HashMap<>(),
+                (map, friendEntry) -> {
+                    String friendSteamId = friendEntry.getKey();
+                    List<SteamGameDetails> friendMultiplayerGames = friendEntry.getValue();
+
+                    List<SteamGameDetails> sharedGames = friendMultiplayerGames.stream()
+                        .filter(game -> {
+                            Long steamAppid = game.getSteamAppid();
+
+                            return ownedMultiplayerGamesIds.contains(steamAppid);
+                        })
+                        .collect(Collectors.toList());
+
+                    if (!sharedGames.isEmpty()) {
+                        map.put(
+                            friendSteamId,
+                            sharedGames.stream()
+                                .map(SteamGameDetails::getName)
+                                .collect(Collectors.toList())
+                        );
+                    }
+
+                    return map;
+                },
+                (map1, map2) -> map2
+            );
+    }
+
+    private Map<String, List<String>> filterMultiplayerGamesByCategory(
+        Map<String, List<SteamGameDetails>> userGamesMap,
+        Function<List<SteamGameDetails>, List<SteamGameDetails>> multiplayerCategoryFunc
+    ) {
+        return userGamesMap.entrySet().stream()
+            .reduce(
+                new HashMap<>(),
+                (map, friendEntry) -> {
+                    String friendSteamId = friendEntry.getKey();
+                    List<SteamGameDetails> friendMultiplayerGames = friendEntry.getValue();
+
+                    List<SteamGameDetails> remotePlayGames = multiplayerCategoryFunc.apply(friendMultiplayerGames);
+
+                    if (!remotePlayGames.isEmpty()) {
+                        map.put(
+                            friendSteamId,
+                            remotePlayGames.stream()
+                                .map(SteamGameDetails::getName)
+                                .collect(Collectors.toList())
+                        );
+                    }
+
+                    return map;
+                },
+                (map1, map2) -> map2
+            );
+    }
+
+    private List<String> getRemotePlayGames(List<SteamGameDetails> games) {
+        Map<String, List<SteamGameDetails>> userGamesMap = new HashMap<>();
+        String steamId = "nil";
+
+        userGamesMap.put(steamId, games);
+
+        return filterMultiplayerGamesByCategory(userGamesMap, steamService::getRemotePlayGames).get(steamId);
+    }
+
+    private Map<String, List<String>> getRemotePlayGames(Map<String, List<SteamGameDetails>> userGamesMap) {
+        return filterMultiplayerGamesByCategory(userGamesMap, steamService::getRemotePlayGames);
+    }
+
+    private List<String> getSplitScreenGames(List<SteamGameDetails> games) {
+        Map<String, List<SteamGameDetails>> userGamesMap = new HashMap<>();
+        String steamId = "nil";
+
+        userGamesMap.put(steamId, games);
+
+        return filterMultiplayerGamesByCategory(userGamesMap, steamService::getSplitScreenGames).get(steamId);
+    }
+
+    private Map<String, List<String>> getSplitScreenGames(Map<String, List<SteamGameDetails>> userGamesMap) {
+        return filterMultiplayerGamesByCategory(userGamesMap, steamService::getSplitScreenGames);
+    }
+
     public ResponseEntity<SteamPlayableMultiplayerGamesResponse> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
         SteamPlayableMultiplayerGamesResponse response = new SteamPlayableMultiplayerGamesResponse();
         String username = getPlayableGamesRequest.getUsername();
@@ -115,6 +201,21 @@ public class SteamWhoCanIPlayWithController {
             List<String> friendsIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
             Map<String, List<SteamGameDetails>> friendsGameDetails = getAllGameDetailsForUsers(friendsIds);
             Map<String, List<SteamGameDetails>> friendsMultiplayerGames = getAllMultiplayerGameDetailsForUsers(friendsGameDetails);
+
+            List<Long> ownedMultiplayerGamesIds = ownedMultiplayerGames.stream().map(SteamGameDetails::getSteamAppid).collect(Collectors.toList());
+
+            Map<String, List<String>> sharedMultiplayerGames = getSharedMultiplayerGames(ownedMultiplayerGamesIds, friendsMultiplayerGames);
+            List<String> ownedRemotePlayGames = getRemotePlayGames(ownedMultiplayerGames);
+            List<String> ownedSplitScreenGames = getSplitScreenGames(ownedMultiplayerGames);
+            Map<String, List<String>> friendsRemotePlayGames = getRemotePlayGames(friendsMultiplayerGames);
+            Map<String, List<String>> friendsSplitScreenGames = getSplitScreenGames(friendsMultiplayerGames);
+
+            friendsRemotePlayGames.put(steamUserId, ownedRemotePlayGames);
+            friendsSplitScreenGames.put(steamUserId, ownedSplitScreenGames);
+
+            response.setSharedMultiplayerGames(sharedMultiplayerGames);
+            response.setRemotePlayGames(friendsRemotePlayGames);
+            response.setSplitScreenGames(friendsSplitScreenGames);
         } catch (InterruptedException | ExecutionException e) {
             log.error("Could not get Steam UserId future. Error = {}", e.getMessage());
 

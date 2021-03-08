@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,17 @@ public class ObjectUtils {
 
     public static <T> T findObjectInList(List<T> list, Predicate<T> filterPredicate) {
         return list.stream().filter(filterPredicate).findFirst().orElse(null);
+    }
+
+    /**
+     * Waits for the {@link CompletableFuture}s to complete and extracts
+     * the result.
+     *
+     * @param future Future to complete.
+     * @return The future result.
+     */
+    public static <T> T getAllCompletableFutureResults(CompletableFuture<T> future) {
+        return getAllCompletableFutureResults(Collections.singletonList(future), result -> {}).get(0);
     }
 
     /**

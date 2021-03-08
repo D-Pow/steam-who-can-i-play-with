@@ -185,6 +185,23 @@ public class SteamWhoCanIPlayWithController {
         return filterMultiplayerGamesByCategory(userGamesMap, steamService::getSplitScreenGames);
     }
 
+    private Map<String, List<String>> convertSteamIdsToUsernames(Map<String, List<String>> mapWithIds, Map<String, String> profileIdToNameMap) {
+        return mapWithIds.entrySet().stream()
+            .reduce(
+                new HashMap<>(),
+                (map, entry) -> {
+                    String steamId = entry.getKey();
+                    List<String> gameNames = entry.getValue();
+                    String steamUsername = profileIdToNameMap.get(steamId);
+
+                    map.put(steamUsername, gameNames);
+
+                    return map;
+                },
+                (map1, map2) -> map2
+            );
+    }
+
     public ResponseEntity<SteamPlayableMultiplayerGamesResponse> getPlayableGamesForUser(@RequestBody GetPlayableGamesRequest getPlayableGamesRequest) {
         SteamPlayableMultiplayerGamesResponse response = new SteamPlayableMultiplayerGamesResponse();
         String username = getPlayableGamesRequest.getUsername();
@@ -202,9 +219,25 @@ public class SteamWhoCanIPlayWithController {
             Map<String, List<SteamGameDetails>> friendsGameDetails = getAllGameDetailsForUsers(friendsIds);
             Map<String, List<SteamGameDetails>> friendsMultiplayerGames = getAllMultiplayerGameDetailsForUsers(friendsGameDetails);
 
+            List<CompletableFuture<SteamUserProfile>> friendProfilesFutures = friendsIds.stream()
+                .map(steamService::getUserProfile)
+                .collect(Collectors.toList());
+            List<SteamUserProfile> friendProfiles = ObjectUtils.getAllCompletableFutureResults(friendProfilesFutures);
+            Map<String, String> profileIdToNameMap = friendProfiles.stream().reduce(
+                new HashMap<>(),
+                (map, profile) -> {
+                    // TODO make responses both return strings
+                    map.put(profile.getSteamid(), profile.getPersonaname());
+
+                    return map;
+                },
+                (map1, map2) -> map2
+            );
+            profileIdToNameMap.put(steamUserId, userProfile.getPersonaname());
+
             List<Long> ownedMultiplayerGamesIds = ownedMultiplayerGames.stream().map(SteamGameDetails::getSteamAppid).collect(Collectors.toList());
 
-            Map<String, List<String>> sharedMultiplayerGames = getSharedMultiplayerGames(ownedMultiplayerGamesIds, friendsMultiplayerGames);
+            Map<String, List<String>> sharedMultiplayerGamesById = getSharedMultiplayerGames(ownedMultiplayerGamesIds, friendsMultiplayerGames);
             List<String> ownedRemotePlayGames = getRemotePlayGames(ownedMultiplayerGames);
             List<String> ownedSplitScreenGames = getSplitScreenGames(ownedMultiplayerGames);
             Map<String, List<String>> friendsRemotePlayGames = getRemotePlayGames(friendsMultiplayerGames);
@@ -213,9 +246,14 @@ public class SteamWhoCanIPlayWithController {
             friendsRemotePlayGames.put(steamUserId, ownedRemotePlayGames);
             friendsSplitScreenGames.put(steamUserId, ownedSplitScreenGames);
 
-            response.setSharedMultiplayerGames(sharedMultiplayerGames);
-            response.setRemotePlayGames(friendsRemotePlayGames);
-            response.setSplitScreenGames(friendsSplitScreenGames);
+            // TODO reduce number of Map/List iterations by using PersonaName as key in the first place
+            Map<String, List<String>> sharedMultiplayerGamesByName = convertSteamIdsToUsernames(sharedMultiplayerGamesById, profileIdToNameMap);
+            Map<String, List<String>> remotePlayGames = convertSteamIdsToUsernames(friendsRemotePlayGames, profileIdToNameMap);
+            Map<String, List<String>> splitScreenGames = convertSteamIdsToUsernames(friendsSplitScreenGames, profileIdToNameMap);
+
+            response.setSharedMultiplayerGames(sharedMultiplayerGamesByName);
+            response.setRemotePlayGames(remotePlayGames);
+            response.setSplitScreenGames(splitScreenGames);
         } catch (InterruptedException | ExecutionException e) {
             log.error("Could not get Steam UserId future. Error = {}", e.getMessage());
 

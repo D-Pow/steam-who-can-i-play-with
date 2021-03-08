@@ -95,7 +95,7 @@ public class SteamGameDetails {
     private String type;
     private String name;
     @JsonProperty("steam_appid")
-    private Long steamAppid;
+    private String steamAppid;
     @JsonProperty("required_age")
     private int requiredAge;
     @JsonProperty("is_free")

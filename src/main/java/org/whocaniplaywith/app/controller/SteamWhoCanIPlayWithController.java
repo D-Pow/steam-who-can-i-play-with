@@ -100,7 +100,7 @@ public class SteamWhoCanIPlayWithController {
         );
     }
 
-    private Map<String, List<String>> getSharedMultiplayerGames(List<Long> ownedMultiplayerGamesIds, Map<String, List<SteamGameDetails>> friendsMultiplayerGames) {
+    private Map<String, List<String>> getSharedMultiplayerGames(List<String> ownedMultiplayerGamesIds, Map<String, List<SteamGameDetails>> friendsMultiplayerGames) {
         return friendsMultiplayerGames.entrySet().stream()
             .reduce(
                 new HashMap<>(),
@@ -110,7 +110,7 @@ public class SteamWhoCanIPlayWithController {
 
                     List<SteamGameDetails> sharedGames = friendMultiplayerGames.stream()
                         .filter(game -> {
-                            Long steamAppid = game.getSteamAppid();
+                            String steamAppid = game.getSteamAppid();
 
                             return ownedMultiplayerGamesIds.contains(steamAppid);
                         })
@@ -226,7 +226,6 @@ public class SteamWhoCanIPlayWithController {
             Map<String, String> profileIdToNameMap = friendProfiles.stream().reduce(
                 new HashMap<>(),
                 (map, profile) -> {
-                    // TODO make responses both return strings
                     map.put(profile.getSteamid(), profile.getPersonaname());
 
                     return map;
@@ -235,7 +234,7 @@ public class SteamWhoCanIPlayWithController {
             );
             profileIdToNameMap.put(steamUserId, userProfile.getPersonaname());
 
-            List<Long> ownedMultiplayerGamesIds = ownedMultiplayerGames.stream().map(SteamGameDetails::getSteamAppid).collect(Collectors.toList());
+            List<String> ownedMultiplayerGamesIds = ownedMultiplayerGames.stream().map(SteamGameDetails::getSteamAppid).collect(Collectors.toList());
 
             Map<String, List<String>> sharedMultiplayerGamesById = getSharedMultiplayerGames(ownedMultiplayerGamesIds, friendsMultiplayerGames);
             List<String> ownedRemotePlayGames = getRemotePlayGames(ownedMultiplayerGames);

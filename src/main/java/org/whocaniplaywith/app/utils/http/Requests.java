@@ -37,7 +37,7 @@ public class Requests {
             .map(queryParamEntry ->
                 UriUtils.encode(queryParamEntry.getKey(), StandardCharsets.UTF_8)
                 + "="
-                + UriUtils.encode(queryParamEntry.getValue(), StandardCharsets.UTF_8.toString())
+                + UriUtils.encode(queryParamEntry.getValue(), StandardCharsets.UTF_8)
             )
             .collect(Collectors.joining("&"));
     }

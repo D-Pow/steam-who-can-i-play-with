@@ -8,4 +8,6 @@ public class Constants {
     public static String URL_STEAM_GET_GAME_DETAILS = "https://store.steampowered.com/api/appdetails";
     public static String URL_STEAM_GET_GAME_STATS_FOR_USER = "http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/";
     public static String URL_STEAM_GET_ALL_GAME_IDS_AND_NAMES = "https://api.steampowered.com/ISteamApps/GetAppList/v2/";
+
+    public static int NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED = 160;
 }

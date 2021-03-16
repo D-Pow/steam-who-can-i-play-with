@@ -82,7 +82,7 @@ public class SteamGameDetails {
 
     @Data
     public static class SupportInfo {
-        private URI url;
+        private String url;
         private String email;
     }
 

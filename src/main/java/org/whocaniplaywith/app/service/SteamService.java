@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.whocaniplaywith.ApplicationConfig;
 import org.whocaniplaywith.app.model.*;
+import org.whocaniplaywith.app.utils.AppProxy;
 import org.whocaniplaywith.app.utils.Constants;
 import org.whocaniplaywith.app.utils.http.Requests;
 
@@ -24,6 +25,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class SteamService {
+    private static int gameDetailsCounter = 0;
+
     @Value("${org.whocaniplaywith.steam-api-key}")
     private String steamApiKey;
 
@@ -153,6 +156,7 @@ public class SteamService {
     @Async
     @Cacheable(ApplicationConfig.STEAM_GAME_DETAILS_CACHE_NAME)
     public CompletableFuture<SteamGameDetails> getGameDetails(String gameAppId) {
+        gameDetailsCounter++;
         log.info("Getting game details for game app ID [{}]", gameAppId);
 
         SteamGameDetails gameDetails = null;
@@ -160,12 +164,21 @@ public class SteamService {
             { "appids", gameAppId }
         });
 
-        String gameDetailsResponseString = new RestTemplate().exchange(
+        // Whole number of times the requests surpassed the rate limit of steam.storepowered.com
+        int numTimesGameDetailsRequestsExceedRateLimiter = gameDetailsCounter / Constants.NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED;
+        // How many times until the next rate limit
+        int gameDetailsCountUntilNextRateLimiter = gameDetailsCounter % Constants.NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED;
+        int proxyIndex = numTimesGameDetailsRequestsExceedRateLimiter;
+
+        String gameDetailsResponseString = null;
+
+        gameDetailsResponseString = AppProxy.attemptRequestThroughProxiesUntilSuccess(
             getGameDetailsUrl,
             HttpMethod.GET,
             new HttpEntity<>(null, null),
-            String.class
-        ).getBody();
+            String.class,
+            proxyIndex
+        );
 
         Map<String, SteamGameDetailsResponse.GameDetailsResponse> gameDetailsResponseMap =
             SteamGameDetailsResponse.getAppIdDetailsMap(gameDetailsResponseString);

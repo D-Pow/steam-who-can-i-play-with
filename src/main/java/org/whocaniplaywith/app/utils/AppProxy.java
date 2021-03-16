@@ -4,8 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -164,5 +169,78 @@ public class AppProxy {
                 return;
             }
         }
+    }
+
+    public static Proxy getProxyAtIndex(int index) {
+        return AVAILABLE_PROXIES.get(index % AVAILABLE_PROXIES.size());
+    }
+
+    public static RestTemplate getRestTemplateWithProxy(Proxy proxy) {
+        java.net.Proxy networkProxy = new java.net.Proxy(
+            java.net.Proxy.Type.HTTP,
+            new InetSocketAddress(proxy.getIp(), Integer.parseInt(proxy.getPort()))
+        );
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+        requestFactory.setProxy(networkProxy);
+
+        return new RestTemplate(requestFactory);
+    }
+
+    public static RestTemplate getRestTemplateWithProxyAtIndex(int proxyIndex) {
+        Proxy proxy = getProxyAtIndex(proxyIndex);
+
+        log.info("ASDF Getting proxy = {}", proxy);
+
+        return getRestTemplateWithProxy(proxy);
+    }
+
+    public static <T> T attemptRequestThroughProxiesUntilSuccess(
+        String url,
+        HttpMethod method,
+        @Nullable HttpEntity<?> requestEntity,
+        Class<T> responseType
+    ) {
+        return attemptRequestThroughProxiesUntilSuccess(
+            url,
+            method,
+            requestEntity,
+            responseType,
+            0
+        );
+    }
+
+    public static <T> T attemptRequestThroughProxiesUntilSuccess(
+        String url,
+        HttpMethod method,
+        @Nullable HttpEntity<?> requestEntity,
+        Class<T> responseType,
+        int proxyStartIndex
+    ) {
+        T responseBody = null;
+        int proxyIndex = proxyStartIndex;
+
+        while (responseBody == null && proxyIndex < AVAILABLE_PROXIES.size()) {
+            RestTemplate restTemplate = getRestTemplateWithProxyAtIndex(proxyIndex);
+            proxyIndex++;
+
+            try {
+                responseBody = restTemplate.exchange(
+                    url,
+                    method,
+                    requestEntity,
+                    responseType
+                ).getBody();
+            } catch (Exception e) {
+                log.error(
+                    "Attempt to [{}] with proxy [index={}, IP={}] failed. Trying again",
+                    url,
+                    proxyIndex,
+                    getProxyAtIndex(proxyIndex).getIp()
+                );
+            }
+        }
+
+        return responseBody;
     }
 }

@@ -43,6 +43,8 @@ public class AppProxy {
             "http.proxyPort",
             "https.proxyPort"
         ));
+
+        getNewResidentialProxies();
     }
 
     /**

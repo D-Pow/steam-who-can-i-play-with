@@ -94,7 +94,7 @@ public class ObjectUtils {
             try {
                 result = future.get();
             } catch (InterruptedException | ExecutionException e) {
-                log.error("Could not get future. Error = {}", e.getMessage());
+                log.error("Could not get future. Error:", e);
             }
 
             sideEffect.accept(result, i);

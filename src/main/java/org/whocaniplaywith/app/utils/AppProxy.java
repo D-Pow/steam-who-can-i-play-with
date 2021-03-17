@@ -190,8 +190,6 @@ public class AppProxy {
     public static RestTemplate getRestTemplateWithProxyAtIndex(int proxyIndex) {
         Proxy proxy = getProxyAtIndex(proxyIndex);
 
-        log.info("ASDF Getting proxy = {}", proxy);
-
         return getRestTemplateWithProxy(proxy);
     }
 

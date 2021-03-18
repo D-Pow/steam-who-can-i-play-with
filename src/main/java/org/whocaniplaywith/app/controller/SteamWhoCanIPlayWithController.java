@@ -64,6 +64,8 @@ public class SteamWhoCanIPlayWithController {
             ))
             .collect(Collectors.toList());
 
+        steamService.saveAllRequestedGameDetails();
+
         return usersGameDetails.stream().reduce(
             new HashMap<>(),
             (map, pair) -> {

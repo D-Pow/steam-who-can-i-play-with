@@ -22,7 +22,6 @@ import java.util.concurrent.Executor;
 @EnableAsync
 @EnableCaching
 @EnableScheduling
-@EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class}) // Remove if using a DB
 @Slf4j
 public class ApplicationConfig {
     private static final long WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7;

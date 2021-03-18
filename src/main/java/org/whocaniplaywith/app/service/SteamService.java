@@ -1,6 +1,7 @@
 package org.whocaniplaywith.app.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
@@ -12,7 +13,9 @@ import org.whocaniplaywith.ApplicationConfig;
 import org.whocaniplaywith.app.model.*;
 import org.whocaniplaywith.app.utils.AppProxy;
 import org.whocaniplaywith.app.utils.Constants;
+import org.whocaniplaywith.app.utils.Pair;
 import org.whocaniplaywith.app.utils.http.Requests;
+import org.whocaniplaywith.dao.SteamGameDetailDao;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +32,11 @@ public class SteamService {
 
     @Value("${org.whocaniplaywith.steam-api-key}")
     private String steamApiKey;
+
+    @Autowired
+    private SteamGameDetailDao steamGameDetailDao;
+
+    private List<Pair<String, String>> steamGameDetailsResponses = new ArrayList<>();
 
     private String getSteamApiUrl(String baseUrl, String[][] steamQueryParams) {
         List<String[]> queryParams = new ArrayList<>(Arrays.asList(steamQueryParams));
@@ -171,9 +179,13 @@ public class SteamService {
         int gameDetailsCountUntilNextRateLimiter = gameDetailsCounter % Constants.NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED;
         int proxyIndex = numTimesGameDetailsRequestsExceedRateLimiter;
 
-        String gameDetailsResponseString = null;
+        gameDetails = steamGameDetailDao.getSteamGameDetails(gameAppId);
 
-        gameDetailsResponseString = AppProxy.attemptRequestThroughProxiesUntilSuccess(
+        if (gameDetails != null) {
+            return CompletableFuture.completedFuture(gameDetails);
+        }
+
+        String gameDetailsResponseString = AppProxy.attemptRequestThroughProxiesUntilSuccess(
             getGameDetailsUrl,
             HttpMethod.GET,
             new HttpEntity<>(null, null),
@@ -193,6 +205,8 @@ public class SteamService {
 
                 if (gameDetailsResponse.isSuccess()) {
                     gameDetails = gameDetailsResponse.getData();
+
+                    steamGameDetailsResponses.add(new Pair<>(gameAppId, gameDetailsResponseString));
                 } else {
                     log.info("Game details request failed for appId [{}]", gameAppId);
                 }
@@ -202,6 +216,25 @@ public class SteamService {
         }
 
         return CompletableFuture.completedFuture(gameDetails);
+    }
+
+    /**
+     * SQLite is single-threaded, so the DAO can't save each response individually
+     * since each {@code getGameDetails()} call is made on a different thread.
+     * Thus, store all the responses in a List and save all the entries here.
+     * Must be called by the controller to ensure all {@code getGameDetails()} calls
+     * are finished.
+     *
+     * TODO This doesn't protect against multiple users hitting the endpoint simultaneously.
+     *
+     * @return
+     */
+    public boolean saveAllRequestedGameDetails() {
+        boolean success = steamGameDetailDao.saveAllSteamGameDetails(steamGameDetailsResponses);
+
+        steamGameDetailsResponses.clear();
+
+        return success;
     }
 
     private List<SteamGameDetails> getMultiplayerGamesOfCategory(List<SteamGameDetails> games, Function<List<Integer>, Boolean> multiplayerCategoryFunc) {

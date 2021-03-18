@@ -10,7 +10,9 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -172,6 +174,14 @@ public class AppProxy {
     }
 
     public static Proxy getProxyAtIndex(int index) {
+        if (index < 0) {
+            try {
+                return new Proxy(InetAddress.getLocalHost().getHostAddress(), null);
+            } catch (UnknownHostException e) {
+                return new Proxy(null, null);
+            }
+        }
+
         return AVAILABLE_PROXIES.get(index % AVAILABLE_PROXIES.size());
     }
 
@@ -204,7 +214,7 @@ public class AppProxy {
             method,
             requestEntity,
             responseType,
-            0
+            -1
         );
     }
 
@@ -218,9 +228,10 @@ public class AppProxy {
         T responseBody = null;
         int proxyIndex = proxyStartIndex;
 
-        while (responseBody == null && proxyIndex < AVAILABLE_PROXIES.size()) {
-            RestTemplate restTemplate = getRestTemplateWithProxyAtIndex(proxyIndex);
-            proxyIndex++;
+        while (responseBody == null && proxyIndex <= AVAILABLE_PROXIES.size()) {
+            RestTemplate restTemplate = proxyIndex < 0
+                ? new RestTemplate()
+                : getRestTemplateWithProxyAtIndex(proxyIndex);
 
             try {
                 responseBody = restTemplate.exchange(
@@ -237,6 +248,8 @@ public class AppProxy {
                     getProxyAtIndex(proxyIndex).getIp()
                 );
             }
+
+            proxyIndex++;
         }
 
         return responseBody;

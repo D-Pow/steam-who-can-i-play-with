@@ -165,7 +165,8 @@ public class SteamService {
         });
 
         // Whole number of times the requests surpassed the rate limit of steam.storepowered.com
-        int numTimesGameDetailsRequestsExceedRateLimiter = gameDetailsCounter / Constants.NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED;
+        // Subtract 1 so that the original IP address can be used for the first n SteamGameDetails requests
+        int numTimesGameDetailsRequestsExceedRateLimiter = (gameDetailsCounter / Constants.NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED) - 1;
         // How many times until the next rate limit
         int gameDetailsCountUntilNextRateLimiter = gameDetailsCounter % Constants.NUM_ALLOWED_REQUESTS_TO_STORE_STEAMPOWERED;
         int proxyIndex = numTimesGameDetailsRequestsExceedRateLimiter;

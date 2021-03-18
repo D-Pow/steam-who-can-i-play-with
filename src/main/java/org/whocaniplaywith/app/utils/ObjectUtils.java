@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -150,5 +151,35 @@ public class ObjectUtils {
         }
 
         return null;
+    }
+
+    public static String toString(Object obj) {
+        StringBuilder sb = new StringBuilder(obj.getClass().getName() + " {");
+
+        Arrays.stream(obj.getClass().getDeclaredFields())
+            .forEach(field -> {
+                String fieldName = field.getName();
+
+                sb.append(fieldName)
+                    .append("=");
+
+                Object fieldValue = "Unparsed";
+
+                try {
+                    field.setAccessible(true); // Make private fields readable
+                    fieldValue = field.get(obj);
+                } catch (IllegalAccessException ignored) {}
+
+                sb.append("(")
+                    .append(fieldValue)
+                    .append(")");
+
+                sb.append(", ");
+            });
+
+        sb.delete(sb.length() - 2, sb.length()); // Remove last comma+space
+        sb.append("}");
+
+        return sb.toString();
     }
 }

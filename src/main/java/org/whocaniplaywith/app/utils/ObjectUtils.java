@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ObjectUtils {
     private static final Logger log = LoggerFactory.getLogger(ObjectUtils.class);
@@ -39,7 +40,13 @@ public class ObjectUtils {
      * @return The future result.
      */
     public static <T> T getAllCompletableFutureResults(CompletableFuture<T> future) {
-        return getAllCompletableFutureResults(Collections.singletonList(future), result -> {}).get(0);
+        List<T> allCompletableFutureResults = getAllCompletableFutureResults(Collections.singletonList(future), result -> {});
+
+        if (allCompletableFutureResults != null && !allCompletableFutureResults.isEmpty()) {
+            return allCompletableFutureResults.get(0);
+        }
+
+        return null;
     }
 
     /**
@@ -86,11 +93,20 @@ public class ObjectUtils {
         List<CompletableFuture<T>> futures,
         BiConsumer<T, Integer> sideEffect
     ) {
+        if (futures == null || futures.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         List<T> results = new ArrayList<>(futures.size());
 
         for (int i = 0; i < futures.size(); i++) {
             CompletableFuture<T> future = futures.get(i);
             T result = null;
+
+            if (future == null) {
+                sideEffect.accept(result, i);
+                continue;
+            }
 
             try {
                 result = future.get();
@@ -98,11 +114,18 @@ public class ObjectUtils {
                 log.error("Could not get future. Error:", e);
             }
 
+            if (result == null) {
+                sideEffect.accept(result, i);
+                continue;
+            }
+
             sideEffect.accept(result, i);
             results.add(result);
         }
 
-        return results;
+        return results.stream()
+            .filter(result -> result != null)
+            .collect(Collectors.toList());
     }
 
     public static String hashResource(Resource resource) {

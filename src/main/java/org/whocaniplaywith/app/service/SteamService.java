@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.whocaniplaywith.ApplicationConfig;
 import org.whocaniplaywith.app.model.*;
@@ -141,16 +142,24 @@ public class SteamService {
             { "include_appinfo", "true" }
         });
 
-        SteamOwnedGamesResponse steamOwnedGamesResponse = new RestTemplate().exchange(
-            getSteamOwnedGamesUrl,
-            HttpMethod.GET,
-            new HttpEntity<>(null, null),
-            SteamOwnedGamesResponse.class
-        ).getBody();
+        SteamOwnedGamesResponse steamOwnedGamesResponse;
+
+        try {
+             steamOwnedGamesResponse = new RestTemplate().exchange(
+                getSteamOwnedGamesUrl,
+                HttpMethod.GET,
+                new HttpEntity<>(null, null),
+                SteamOwnedGamesResponse.class
+            ).getBody();
+        } catch (RestClientException e) {
+            log.error("Could not get owned games for user [{}], e = ", steamId, e);
+            return CompletableFuture.completedFuture(ownedGames);
+        }
 
         if (
             steamOwnedGamesResponse != null
             && steamOwnedGamesResponse.getResponse() != null
+            && steamOwnedGamesResponse.getResponse().getGames() != null
             && !steamOwnedGamesResponse.getResponse().getGames().isEmpty()
         ) {
             ownedGames = steamOwnedGamesResponse.getResponse().getGames();
@@ -238,6 +247,10 @@ public class SteamService {
     }
 
     private List<SteamGameDetails> getMultiplayerGamesOfCategory(List<SteamGameDetails> games, Function<List<Integer>, Boolean> multiplayerCategoryFunc) {
+        if (games == null) {
+            return new ArrayList<>();
+        }
+
         return games.stream()
             .filter(gameDetails -> {
                 if (gameDetails.getCategories() == null) {

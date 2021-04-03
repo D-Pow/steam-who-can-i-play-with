@@ -15,6 +15,7 @@ import org.whocaniplaywith.app.service.SteamService;
 import org.whocaniplaywith.app.utils.ObjectUtils;
 import org.whocaniplaywith.app.utils.Pair;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +84,7 @@ public class SteamWhoCanIPlayWithController {
 
         multiplayerGames.put(steamId, userGames);
 
-        return getAllMultiplayerGameDetailsForUsers(multiplayerGames).get(steamId);
+        return getAllMultiplayerGameDetailsForUsers(multiplayerGames).getOrDefault(steamId, new ArrayList<>());
     }
 
     private Map<String, List<SteamGameDetails>> getAllMultiplayerGameDetailsForUsers(Map<String, List<SteamGameDetails>> usersGames) {

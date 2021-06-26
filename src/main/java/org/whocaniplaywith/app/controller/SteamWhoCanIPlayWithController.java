@@ -212,6 +212,15 @@ public class SteamWhoCanIPlayWithController {
         log.info("Request = {}", getPlayableGamesRequest);
 
         try {
+            /*
+             * TODO This fails from 401 Unauthorized error due to private profiles.
+             *  Try to find a a way around this.
+             *  Possibilities:
+             *   - https://steamcommunity.com/ - search brings up links to /profile/steamId but just using steamId\
+             *     isn't enough (see below attempts)
+             *   - https://steamid.io/ (same problem as above)
+             *   - OAUTH - still wouldn't work for private profiles, only for friends-only profiles
+             */
             String steamUserId = steamService.getSteamIdFromUsername(username).get();
 
             SteamUserProfile userProfile = steamService.getUserProfile(steamUserId).get();

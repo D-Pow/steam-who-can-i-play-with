@@ -174,7 +174,7 @@ public class SteamService {
     @Cacheable(ApplicationConfig.STEAM_GAME_DETAILS_CACHE_NAME)
     public CompletableFuture<SteamGameDetails> getGameDetails(String gameAppId) {
         gameDetailsCounter++;
-        log.info("Getting game details for game app ID [{}]", gameAppId);
+        log.debug("Getting game details for game app ID [{}]", gameAppId);
 
         SteamGameDetails gameDetails = null;
         String getGameDetailsUrl = Requests.getUrlWithQueryParams(Constants.URL_STEAM_GET_GAME_DETAILS, new String[][]{

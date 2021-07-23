@@ -11,6 +11,8 @@ import org.whocaniplaywith.app.controller.SteamWhoCanIPlayWithController;
 import org.whocaniplaywith.app.model.GetPlayableGamesRequest;
 import org.whocaniplaywith.app.model.SteamPlayableMultiplayerGamesResponse;
 
+// TODO: https://stackoverflow.com/questions/5117248/spring-sqlite-in-multi-threaded-application
+
 @RestController
 @CrossOrigin
 @Slf4j

@@ -223,13 +223,23 @@ public class SteamWhoCanIPlayWithController {
              */
             String steamUserId = steamService.getSteamIdFromUsername(username).get();
 
+//            String nojamm_steamUserId = "76561198403141004";
+            String tommy_steamUserId = "76561198138000685";
+            steamUserId = tommy_steamUserId;
+
             SteamUserProfile userProfile = steamService.getUserProfile(steamUserId).get();
             List<SteamGameDetails> ownedGamesDetails = getAllGameDetailsForUser(steamUserId);
+            // TODO can't get owned games of nojamm
+            log.info("ASDF ownedGamesDetails = {}", ownedGamesDetails.size());
             List<SteamGameDetails> ownedMultiplayerGames = getAllMultiplayerGameDetailsForUser(ownedGamesDetails);
+            log.info("ASDF ownedMultiplayerGames = {}", ownedMultiplayerGames.size());
 
             List<String> friendsIds = steamService.getSteamFriendsIds(userProfile.getSteamid()).get();
+            log.info("ASDF friendsIds = {}", friendsIds.size());
             Map<String, List<SteamGameDetails>> friendsGameDetails = getAllGameDetailsForUsers(friendsIds);
+            log.info("ASDF friendsGameDetails = {}", friendsGameDetails.size());
             Map<String, List<SteamGameDetails>> friendsMultiplayerGames = getAllMultiplayerGameDetailsForUsers(friendsGameDetails);
+            log.info("ASDF friendsMultiplayerGames = {}", friendsMultiplayerGames.size());
 
             List<CompletableFuture<SteamUserProfile>> friendProfilesFutures = friendsIds.stream()
                 .map(steamService::getUserProfile)
